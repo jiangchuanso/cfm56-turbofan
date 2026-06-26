@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CFM56-7B · Anatomía de un turbofán</title>
+  <meta name="description" content="Disecciona por dentro un motor a reacción CFM56-7B en 3D real.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ============================================ -->
+  <!-- 3D CANVAS — fixed full viewport background  -->
+  <!-- ============================================ -->
+  <canvas id="engine-canvas"></canvas>
+
+  <!-- Vignette over canvas for legibility -->
+  <div class="canvas-vignette"></div>
+
+  <!-- Subtle viewport corner ticks -->
+  <span class="viewport-corner tl"></span>
+  <span class="viewport-corner tr"></span>
+  <span class="viewport-corner bl"></span>
+  <span class="viewport-corner br"></span>
+
+  <!-- ============================================ -->
+  <!-- Top HUD                                      -->
+  <!-- ============================================ -->
+  <div class="hud">
+    <div class="hud-block">
+      <span class="hud-key">DOC</span>
+      <span class="hud-val">CFM56-7B26 / SHT 01 OF 03</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-key">MODE</span>
+      <span class="hud-val" id="mode-readout">RENDER</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-key">CAM</span>
+      <span class="hud-val" id="cam-readout">ORBIT</span>
+    </div>
+    <div class="hud-block">
+      <span class="hud-key">INPUT</span>
+      <span class="hud-val">DRAG · ROTATE</span>
+    </div>
+    <div class="hud-block hud-right">
+      <span class="hud-key">SCROLL</span>
+      <span class="hud-val"><span id="scroll-pct">000</span>%</span>
+    </div>
+  </div>
+
+  <!-- ============================================ -->
+  <!-- Instrument cluster (fixed, fades w/ story)   -->
+  <!-- ============================================ -->
+  <div class="cluster" id="cluster">
+
+    <!-- Top-right fan rotor instrument -->
+    <div class="ovl-instrument">
+      <svg viewBox="0 0 110 110" width="100%" height="100%">
+        <circle cx="55" cy="55" r="48" class="hud-ring"/>
+        <circle cx="55" cy="55" r="44" class="hud-ring-inner" stroke-dasharray="2 4"/>
+        <g id="hud-fan-rotor" transform="translate(55, 55)">
+          <g class="hud-blades">
+            <line x1="0" y1="-7" x2="0" y2="-42"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(15)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(30)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(45)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(60)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(75)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(90)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(105)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(120)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(135)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(150)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(165)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(180)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(195)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(210)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(225)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(240)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(255)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(270)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(285)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(300)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(315)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(330)"/>
+            <line x1="0" y1="-7" x2="0" y2="-42" transform="rotate(345)"/>
+          </g>
+          <circle cx="0" cy="0" r="7" class="hud-hub"/>
+        </g>
+      </svg>
+      <span class="ovl-rpm">FAN · <span id="rpm-readout">0000</span> RPM</span>
+    </div>
+
+    <!-- Bottom-right disassembly progress -->
+    <div class="ovl-pos">
+      <div class="pos-meta">
+        <span>DESPIECE · <span id="disasm-pct">0%</span></span>
+      </div>
+      <div class="pos-track">
+        <span class="pos-tick" style="--i:0"></span>
+        <span class="pos-tick" style="--i:1"></span>
+        <span class="pos-tick" style="--i:2"></span>
+        <span class="pos-tick" style="--i:3"></span>
+        <span class="pos-tick" style="--i:4"></span>
+        <span class="pos-tick" style="--i:5"></span>
+        <span class="pos-tick" style="--i:6"></span>
+        <span class="pos-tick" style="--i:7"></span>
+        <span class="pos-tick" style="--i:8"></span>
+        <span class="pos-tick" style="--i:9"></span>
+        <span class="pos-tick" style="--i:10"></span>
+        <span class="pos-tick" style="--i:11"></span>
+        <span class="pos-tick" style="--i:12"></span>
+        <span class="pos-tick" style="--i:13"></span>
+        <span class="pos-tick" style="--i:14"></span>
+        <span class="pos-marker" id="pos-marker"></span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============================================ -->
+  <!-- 1 · HERO                                     -->
+  <!-- ============================================ -->
+  <section class="hero" id="top">
+    <div class="hero-inner">
+      <p class="eyebrow">CFM INTERNATIONAL · GE × SAFRAN · 1995</p>
+      <h1 class="hero-title" id="hero-title">CFM56<span class="dim">-7B</span></h1>
+      <p class="hero-sub">Anatomía de un turbofán de alto bypass — en 3D</p>
+      <ul class="hero-meta">
+        <li><b>1,55 m</b> Ø fan</li>
+        <li><b>33 atm</b> presión</li>
+        <li><b>1500 °C</b> combustión</li>
+        <li><b>14 460 RPM</b> eje HP</li>
+      </ul>
+      <div class="hero-scroll">
+        <span class="hero-scroll-label">SCROLL · LO REVELA</span>
+        <svg width="14" height="44" viewBox="0 0 14 44" fill="none">
+          <line x1="7" y1="2" x2="7" y2="36" stroke="currentColor" stroke-width="1.2"/>
+          <polyline points="2,30 7,38 12,30" stroke="currentColor" stroke-width="1.2" fill="none"/>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 2 · STAGE — el motor se revela y se despieza  -->
+  <!-- Sección alta: el scroll controla el despiece   -->
+  <!-- ============================================ -->
+  <section class="stage" id="stage">
+    <div class="stage-caption">
+      <p class="eyebrow">DESPIECE INTERACTIVO</p>
+      <h2>El motor, al desnudo.</h2>
+      <p class="stage-hint">Haz scroll para descomponerlo pieza a pieza<br>arrastra para orbitar a su alrededor</p>
+    </div>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 3 · SPECS                                    -->
+  <!-- ============================================ -->
+  <section class="specs">
+    <p class="eyebrow">FICHA TÉCNICA · CFM56-7B26</p>
+    <h2>Los números, sin redondear.</h2>
+    <div class="specs-grid">
+      <div class="spec"><span class="spec-num" data-count="121">0</span><span class="spec-unit">kN</span><span class="spec-label">Empuje máx. al despegue</span></div>
+      <div class="spec"><span class="spec-num" data-count="14460">0</span><span class="spec-unit">RPM</span><span class="spec-label">Eje HP (100 %)</span></div>
+      <div class="spec"><span class="spec-num" data-count="5175">0</span><span class="spec-unit">RPM</span><span class="spec-label">Eje LP (100 %)</span></div>
+      <div class="spec"><span class="spec-num" data-count="32.8" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">Ratio de compresión</span></div>
+      <div class="spec"><span class="spec-num" data-count="5.5" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">Bypass ratio</span></div>
+      <div class="spec"><span class="spec-num" data-count="397">0</span><span class="spec-unit">kg/s</span><span class="spec-label">Aire aspirado</span></div>
+      <div class="spec"><span class="spec-num" data-count="1500">0</span><span class="spec-unit">°C</span><span class="spec-label">Temp. de cámara</span></div>
+      <div class="spec"><span class="spec-num" data-count="2386">0</span><span class="spec-unit">kg</span><span class="spec-label">Peso seco</span></div>
+      <div class="spec"><span class="spec-num" data-count="2.51" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">Longitud</span></div>
+      <div class="spec"><span class="spec-num" data-count="1.55" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">Diámetro fan</span></div>
+      <div class="spec"><span class="spec-num" data-count="24">0</span><span class="spec-unit"></span><span class="spec-label">Álabes del fan</span></div>
+      <div class="spec"><span class="spec-num" data-count="9">0</span><span class="spec-unit"></span><span class="spec-label">Etapas HPC</span></div>
+    </div>
+    <p class="specs-footer">
+      Fuentes: CFM International, FAA TCDS E00055EN, Boeing 737NG AMM.
+      <br>Render con <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>,
+      animaciones con <a href="https://animejs.com" target="_blank" rel="noopener">anime.js v4</a>.
+    </p>
+  </section>
+
+  <!-- ============================================ -->
+  <!-- 4 · FOOTER                                    -->
+  <!-- ============================================ -->
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-brand">CFM56<span class="dim">·7B</span></div>
+      <p class="footer-note">
+        Visualización 3D interactiva · no es material oficial de CFM International.<br>
+        Hecho con three.js + anime.js v4.
+      </p>
+      <a class="footer-top" href="#top">↑ Volver arriba</a>
+    </div>
+  </footer>
+
+  <script type="module" src="script.js"></script>
+</body>
+</html>

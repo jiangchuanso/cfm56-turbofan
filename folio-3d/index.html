@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FOLIO·3D — Patio de física</title>
+    <meta name="description" content="Portfolio 3D interactivo con Three.js + Rapier. Conduce y choca." />
+  </head>
+  <body class="bg-[#11151f] text-zinc-100 overflow-hidden antialiased">
+    <!-- ===== Canvas WebGL ===== -->
+    <canvas id="webgl" class="fixed inset-0 block w-full h-full"></canvas>
+
+    <!-- ===== Capa de UI (no captura el ratón salvo donde se indique) ===== -->
+    <div id="ui" class="fixed inset-0 z-10 pointer-events-none select-none font-sans">
+
+      <!-- HUD: marca arriba a la izquierda -->
+      <header id="hud-brand" class="absolute top-6 left-6 opacity-0">
+        <p class="text-[0.7rem] tracking-[0.35em] text-zinc-400">THREE.JS · RAPIER · ANIME.JS</p>
+        <h1 class="text-2xl font-semibold tracking-tight">FOLIO<span class="text-orange-400">·</span>3D</h1>
+      </header>
+
+      <!-- HUD: velocímetro abajo a la izquierda -->
+      <div id="hud-speed" class="absolute bottom-6 left-6 opacity-0 flex items-end gap-2">
+        <span id="speed-val" class="text-5xl font-semibold tabular-nums leading-none">0</span>
+        <span class="text-xs tracking-[0.3em] text-zinc-400 mb-1">KM/H</span>
+      </div>
+
+      <!-- HUD: controles abajo al centro -->
+      <div id="hud-controls"
+           class="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-0
+                  flex items-center gap-2 text-[0.7rem] tracking-wider text-zinc-300">
+        <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">W A S D</kbd>
+        <span class="text-zinc-500">conducir</span>
+        <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">⇧</kbd>
+        <span class="text-zinc-500">turbo</span>
+        <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">R</kbd>
+        <span class="text-zinc-500">reiniciar</span>
+      </div>
+
+      <!-- Panel de proyecto (se despliega al acercarse a un portal) -->
+      <aside id="project"
+             class="absolute top-24 right-6 w-80 max-w-[80vw]
+                    opacity-0 pointer-events-none
+                    rounded-2xl border border-white/10 bg-[#161b27]/80 backdrop-blur-xl
+                    p-6 shadow-2xl shadow-black/40">
+        <p id="project-tag" class="text-[0.65rem] tracking-[0.3em] text-orange-400 mb-2">PROYECTO</p>
+        <h2 id="project-title" class="text-xl font-semibold mb-2">—</h2>
+        <p id="project-desc" class="text-sm leading-relaxed text-zinc-300">—</p>
+        <div id="project-tags" class="mt-4 flex flex-wrap gap-2 text-[0.65rem]"></div>
+      </aside>
+
+      <!-- Intro / loader a pantalla completa -->
+      <div id="intro"
+           class="absolute inset-0 z-20 pointer-events-auto
+                  flex flex-col items-center justify-center text-center
+                  bg-[#0c0f17]">
+        <p id="intro-eyebrow" class="opacity-0 text-[0.7rem] tracking-[0.4em] text-zinc-500 mb-6">
+          PATIO DE FÍSICA INTERACTIVO
+        </p>
+        <h1 id="intro-title" class="text-6xl md:text-8xl font-bold tracking-tight mb-4">
+          FOLIO<span class="text-orange-400">·</span>3D
+        </h1>
+        <p id="intro-sub" class="opacity-0 text-zinc-400 max-w-md mb-10 px-6">
+          Un mundo 3D con física real. Conduce el coche, embiste las cajas
+          y acércate a los portales para descubrir cada proyecto.
+        </p>
+        <button id="intro-btn"
+                class="opacity-0 group inline-flex items-center gap-3 rounded-full
+                       border border-white/15 bg-white/5 px-7 py-3 text-sm tracking-widest
+                       hover:bg-orange-400 hover:text-black hover:border-orange-400
+                       transition-colors duration-300">
+          ENTRAR
+          <span class="transition-transform group-hover:translate-x-1">→</span>
+        </button>
+      </div>
+
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
