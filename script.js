@@ -1430,11 +1430,40 @@ function setEngine(key) {
       centerAndScale(obj, cfg.target);
       obj.rotation.set(cfg.pitch || 0, cfg.yaw || 0, 0);
       glbEngine.add(obj);
+      // Prepara el "despiece falso" genérico: memoriza la posición base de cada
+      // sub-malla y deduce el eje largo del motor para el estiramiento axial.
+      const parts = [];
+      obj.traverse((o) => { if (o.isMesh) { o.userData._bp = o.position.clone(); parts.push(o); } });
+      const _b = new THREE.Box3().setFromObject(obj);
+      const _s = _b.getSize(new THREE.Vector3());
+      glbEngine.userData.parts = parts;
+      glbEngine.userData.longAxis = (_s.x >= _s.y && _s.x >= _s.z) ? 'x' : (_s.y >= _s.z ? 'y' : 'z');
+      glbEngine.userData.stretch = 1;
       glbEngine.visible = true;
-      console.log('engine', key, 'listo');
+      console.log('engine', key, 'listo · partes', parts.length, '· eje', glbEngine.userData.longAxis);
     }, undefined, (e) => console.error('Error engine GLB', cfg.url, e));
   }
   syncSelectorUI();
+}
+
+// Despiece "falso" genérico para motores GLB: sin semántica de piezas, cada
+// sub-malla se aleja radialmente del centro y el grupo se estira en su eje largo.
+function applyGlbExplode(e) {
+  const parts = glbEngine.userData.parts;
+  if (!parts || currentEngineKey === 'procedural') return;
+  const spread = 1.5;
+  for (const m of parts) {
+    const bp = m.userData._bp;
+    if (bp) m.position.copy(bp).addScaledVector(bp, spread * e);
+  }
+  glbEngine.userData.stretch = 1 + e * 0.6;
+}
+// Escala del motor activo en la fase de vuelo: para GLB aplica el estiramiento axial.
+function setEngScale(g, base) {
+  if (currentEngineKey === 'procedural') { g.scale.setScalar(base); return; }
+  const la = glbEngine.userData.longAxis || 'x';
+  g.scale.set(base, base, base);
+  g.scale[la] = base * (glbEngine.userData.stretch || 1);
 }
 
 function setupSelectors() {
@@ -1657,6 +1686,9 @@ function updateEngineScroll() {
     }
   });
 
+  // Despiece "falso" genérico para motores GLB (no tiene piezas semánticas)
+  applyGlbExplode(explodeAmt);
+
   // Morph técnico → realista + apagar líneas
   const fillOp = reveal * (0.18 + realism * 0.79);
   for (const m of allFillMats) {
@@ -1680,7 +1712,7 @@ function updateEngineScroll() {
   if (realPlaneReady) {
     // Modelo real: aparece en vuelo; el motor se oculta al despegar
     eng.visible = pe < 0.2;
-    eng.scale.setScalar(1); eng.position.set(0, 0, 0);
+    setEngScale(eng, 1); eng.position.set(0, 0, 0);
     eng.rotation.y = -0.4; eng.rotation.x = 0.12;
     realPlane.visible = pe > 0.02;
     const op = clamp01((pe - 0.05) / 0.4);
@@ -1689,7 +1721,7 @@ function updateEngineScroll() {
     for (const m of realMats) m.opacity = opq ? 1 : op;
   } else {
     // (narrativa procedural original, mientras el modelo aún carga)
-    eng.scale.setScalar(1 - pe * 0.4);
+    setEngScale(eng, 1 - pe * 0.4);
     eng.position.set(ENG_WING.x * pe, ENG_WING.y * pe, ENG_WING.z * pe);
     eng.rotation.y = -0.4 * (1 - pe);
     eng.rotation.x = 0.12 * (1 - pe);
