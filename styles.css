@@ -683,3 +683,18 @@ body::before {
   .part-label .pl-box { max-width: 150px; padding: 5px 8px; }
   .part-label .pl-box span { font-size: 9.5px; }
 }
+
+/* ---- Selector 机型 / 发动机 ---- */
+.selector-bar{
+  position: fixed; left: 16px; bottom: 16px; z-index: 60;
+  display: flex; gap: 14px; padding: 10px 12px;
+  background: rgba(10,12,16,.72); border: 1px solid rgba(120,200,255,.25);
+  border-radius: 10px; backdrop-filter: blur(6px); font-family: var(--mono);
+}
+.sel-group{ display:flex; align-items:center; gap:8px; }
+.sel-key{ font-size:11px; letter-spacing:.12em; color:#7fd3ff; text-transform:uppercase; }
+.sel-select{
+  background:#0c0f14; color:#dfe9f2; border:1px solid rgba(120,200,255,.3);
+  border-radius:6px; padding:5px 8px; font-family: var(--mono); font-size:12px; outline:none; cursor:pointer;
+}
+.sel-select:focus{ border-color:#7fd3ff; }

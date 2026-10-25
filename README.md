@@ -36,8 +36,12 @@ Artifact（标签推送时还会发布为 Release）产出。
   静态资源 + `WEB-INF/web.xml` 到暂存区，再 `Compress-Archive` 并重命名为 `.war`）。
 
 工作流收集的静态资源为：`index.html`、`script.js`、`styles.css`、
-`plane.obj`、`plane.mtl`、`sky.hdr` 与 `WEB-INF/web.xml`，自动排除
+`model/`（含 `plane.obj`、`plane.mtl`、`sky.hdr` 与全部 `.glb` 机型/发动机模型）、
+`vendor/`（本地化后的 Three.js、anime.js 与字体）与 `WEB-INF/web.xml`，自动排除
 `.git`、`folio-3d/`（Vite 变体需单独 `npm run build`）、`code-cards/`、`*.py` 等。
+
+> ⚠️ 若 `.github/workflows/build-war.yml` 仍按旧清单（根目录的 `plane.obj` 等）
+> 收集资源，需同步加入 `model/` 与 `vendor/` 两个目录，否则部署包会缺模型/缺库。
 
 ### 2. 部署
 把生成的 `cfm56.war` 复制到 Tomcat 的 `webapps/` 目录，Tomcat 会自动解压部署；
@@ -45,8 +49,9 @@ Artifact（标签推送时还会发布为 Release）产出。
 - `cfm56.war` → `http://<主机>:8080/cfm56/`
 - `ROOT.war`   → `http://<主机>:8080/`
 
-> 说明：页面通过 CDN（unpkg）加载 Three.js 及插件，并通过 Google Fonts 加载字体，
-> 因此**浏览端需要可访问外网**。如需完全离线运行，可将 Three.js 相关文件 vendoring
-> 到本地并修改 `index.html` 中的 importmap 路径。
+> 说明：本项目已**完全离线化**——Three.js（r160 核心 + 用到的 addons）、anime.js v4
+> 与字体（JetBrains Mono / Space Grotesk）均已 vendoring 到本地 `vendor/`，
+> `index.html` 的 importmap 指向 `./vendor/three/...`，浏览端**无需访问外网**即可运行。
+> 模型资源统一收纳在 `model/`（`plane.obj/.mtl`、环境贴图 `sky.hdr` 与全部 `.glb`）。
 
 作者：[Gonzalo-IA](https://gonzalfred.com)。

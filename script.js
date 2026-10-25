@@ -14,11 +14,13 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 import { MTLLoader } from 'three/addons/loaders/MTLLoader.js';
 import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import {
   animate,
   createTimeline,
   stagger,
-} from 'https://cdn.jsdelivr.net/npm/animejs@4/+esm';
+} from './vendor/animejs/anime.esm.js';
 
 /* ---------- DOM shortcuts ---------- */
 const $  = (s, r = document) => r.querySelector(s);
@@ -1235,7 +1237,7 @@ cctx.fillStyle = cgrad; cctx.fillRect(0, 0, 128, 128);
 const SHOW_CLOUDS = true;    // nubes cálidas de atardecer sobre el HDRI
 
 /* ---- Cielo HDRI (Poly Haven · industrial_sunset_puresky) ---- */
-new RGBELoader().load('sky.hdr', (tex) => {
+new RGBELoader().load('model/sky.hdr', (tex) => {
   tex.mapping = THREE.EquirectangularReflectionMapping;
   hdrTex = tex;
   hdrReady = true;
@@ -1306,68 +1308,155 @@ const tintMat = new THREE.MeshBasicMaterial({ color: 0xff4a1e, transparent: true
 const tintSphere = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), tintMat);
 scene.add(tintSphere);
 
-/* ---- Modelo 737 REAL (.obj + .mtl) ----
-   Se auto-centra, se escala por la eslora y se orienta (eje Z→X). Reemplaza al
-   avión procedural en la fase de vuelo; el motor/despiece procedural se mantiene. */
-new MTLLoader().load('plane.mtl', (materials) => {
-  materials.preload();
-  const objLoader = new OBJLoader();
-  objLoader.setMaterials(materials);
-  objLoader.load('plane.obj', (obj) => {
-    // Quitar geometría "outlier" (una pieza suelta a ~x>24 en coords del modelo)
-    obj.traverse((o) => {
-      if (!o.isMesh || !o.geometry) return;
-      const pos = o.geometry.attributes.position, idx = o.geometry.index;
-      const over = (v) => pos.getX(v) > 24;
-      if (idx) {
-        for (let i = 0; i < idx.count; i += 3) {
-          const a = idx.getX(i);
-          if (over(a) || over(idx.getX(i + 1)) || over(idx.getX(i + 2))) { idx.setX(i + 1, a); idx.setX(i + 2, a); }
-        }
-        idx.needsUpdate = true;
-      } else {
-        for (let i = 0; i < pos.count; i += 3) {
-          if (over(i) || over(i + 1) || over(i + 2)) {
-            const x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
-            pos.setXYZ(i + 1, x, y, z); pos.setXYZ(i + 2, x, y, z);
-          }
-        }
-        pos.needsUpdate = true;
-      }
-    });
-    const box = new THREE.Box3().setFromObject(obj);
-    const center = box.getCenter(new THREE.Vector3());
-    const size = box.getSize(new THREE.Vector3());
-    const s = 26 / size.z;                       // escala por la eslora (Z≈39,8)
-    obj.scale.setScalar(s);
-    obj.position.set(-center.x * s, -center.y * s, -center.z * s);
-    obj.traverse((o) => {
-      if (o.isMesh) {
-        o.castShadow = false; o.receiveShadow = false;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        for (const m of mats) {
-          m.transparent = true; m.opacity = 0;
-          if (m.shininess !== undefined) m.shininess = 55;       // highlight estrecho → reflejo según ángulo
-          if (m.specular) m.specular.setRGB(0.38, 0.17, 0.06);   // reflejo cálido del sol
-          if (m.envMapIntensity !== undefined) m.envMapIntensity = 0.25;
-          realMats.push(m);
-        }
-      }
-    });
-    realPlane = new THREE.Group();
-    realPlane.add(obj);
-    realPlane.rotation.y = -Math.PI / 2;         // eje Z (eslora) → X (se ajusta con captura)
-    realPlane.visible = false;
-    flightGroup.add(realPlane);
-    aircraft.visible = false;                    // fuera el avión procedural
-    realPlaneReady = true;
-    console.log('737 .obj cargado · size', size, '· escala', s.toFixed(3));
-  }, undefined, (err) => console.error('Error cargando plane.obj:', err));
-}, undefined, (err) => console.error('Error cargando plane.mtl:', err));
+/* =========================================================
+   SELECTOR · 机型 (airframe GLB/OBJ) + 发动机 (engine GLB)
+   Todos los assets viven en model/. Se pueden cambiar en vivo.
+   ========================================================= */
+const AIRFRAMES = {
+  'b737-800': { url: 'model/plane.obj',               type: 'obj', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-800' },
+  'b737-700': { url: 'model/boeing_737-700.glb',      type: 'glb', yaw: 0,            target: 26, label: 'Boeing 737-700' },
+  'a319':     { url: 'model/airbus_a319.glb',         type: 'glb', yaw: 0,            target: 26, label: 'Airbus A319' },
+  'crj200':   { url: 'model/bombardier_crj-200.glb',  type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-200' },
+};
+const ENGINES = {
+  'cfm56-7b-proc': { type: 'procedural',                                          label: 'CFM56-7B（程序化解剖）' },
+  'cfm56-7b':      { url: 'model/cfm56-7b.glb', type: 'glb', yaw: 0, pitch: 0, target: 3.0, label: 'CFM56-7B（模型）' },
+  'cfm56-5b':      { url: 'model/cfm56-5b.glb',  type: 'glb', yaw: 0, pitch: 0, target: 3.0, label: 'CFM56-5B（模型）' },
+};
 
-// Slight initial rotation of the whole engine for the 3/4 view in the hero
-engine.rotation.y = -0.4;
-engine.rotation.x = 0.12;
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('./vendor/three/jsm/libs/draco/');
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+function disposeGroup(g) {
+  g.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) {
+      const ms = Array.isArray(o.material) ? o.material : [o.material];
+      ms.forEach((m) => m.dispose());
+    }
+  });
+}
+// Centra un objeto en el origen y lo escala: su dimensión mayor queda en `target` unidades.
+function centerAndScale(obj, target) {
+  const box = new THREE.Box3().setFromObject(obj);
+  const center = box.getCenter(new THREE.Vector3());
+  const size = box.getSize(new THREE.Vector3());
+  const k = target / (Math.max(size.x, size.y, size.z) || 1);
+  obj.scale.setScalar(k);
+  obj.position.set(-center.x * k, -center.y * k, -center.z * k);
+}
+function prepMats(obj, store) {
+  obj.traverse((o) => {
+    if (!o.isMesh || !o.geometry) return;
+    o.castShadow = false; o.receiveShadow = false;
+    const mats = Array.isArray(o.material) ? o.material : [o.material];
+    for (const m of mats) {
+      m.transparent = true; m.opacity = 0;
+      if (m.shininess !== undefined) m.shininess = 55;
+      if (m.specular) m.specular.setRGB(0.38, 0.17, 0.06);
+      if (m.envMapIntensity !== undefined) m.envMapIntensity = 0.25;
+      store.push(m);
+    }
+  });
+}
+
+let currentAirframeKey = 'b737-800';
+let currentEngineKey = 'cfm56-7b-proc';
+const glbEngine = new THREE.Group();
+glbEngine.visible = false;
+flightGroup.add(glbEngine);
+
+function setAirframe(key) {
+  const cfg = AIRFRAMES[key];
+  if (!cfg) return;
+  const onObj = (obj) => {
+    if (realPlane) { flightGroup.remove(realPlane); disposeGroup(realPlane); }
+    realMats.length = 0;
+    centerAndScale(obj, cfg.target);
+    const grp = new THREE.Group();
+    grp.add(obj);
+    grp.rotation.y = cfg.yaw;
+    grp.visible = false;
+    flightGroup.add(grp);
+    prepMats(obj, realMats);
+    realPlane = grp;
+    aircraft.visible = false;
+    realPlaneReady = true;
+    currentAirframeKey = key;
+    syncSelectorUI();
+    console.log('airframe', key, 'listo');
+  };
+  if (cfg.type === 'obj') {
+    new MTLLoader().load(cfg.url.replace(/\.obj$/, '.mtl'), (materials) => {
+      materials.preload();
+      const ol = new OBJLoader(); ol.setMaterials(materials);
+      ol.load(cfg.url, (obj) => {
+        // limpiar pieza outlier suelta (plane.obj tiene una a x>24)
+        obj.traverse((o) => {
+          if (!o.isMesh || !o.geometry) return;
+          const pos = o.geometry.attributes.position, idx = o.geometry.index;
+          const over = (v) => pos.getX(v) > 24;
+          if (idx) {
+            for (let i = 0; i < idx.count; i += 3) {
+              const a = idx.getX(i);
+              if (over(a) || over(idx.getX(i + 1)) || over(idx.getX(i + 2))) { idx.setX(i + 1, a); idx.setX(i + 2, a); }
+            }
+            idx.needsUpdate = true;
+          }
+        });
+        onObj(obj);
+      }, undefined, (e) => console.error('Error cargando', cfg.url, e));
+    }, undefined, (e) => console.error('Error MTL', cfg.url, e));
+  } else {
+    gltfLoader.load(cfg.url, (gltf) => onObj(gltf.scene), undefined, (e) => console.error('Error GLB', cfg.url, e));
+  }
+}
+
+function setEngine(key) {
+  const cfg = ENGINES[key];
+  if (!cfg) return;
+  currentEngineKey = key;
+  if (cfg.type === 'procedural') {
+    glbEngine.visible = false;
+    labelLayer.style.display = '';
+  } else {
+    engine.visible = false;
+    labelLayer.style.display = 'none';
+    gltfLoader.load(cfg.url, (gltf) => {
+      while (glbEngine.children.length) { const c = glbEngine.children.pop(); disposeGroup(c); }
+      const obj = gltf.scene;
+      centerAndScale(obj, cfg.target);
+      obj.rotation.set(cfg.pitch || 0, cfg.yaw || 0, 0);
+      glbEngine.add(obj);
+      glbEngine.visible = true;
+      console.log('engine', key, 'listo');
+    }, undefined, (e) => console.error('Error engine GLB', cfg.url, e));
+  }
+  syncSelectorUI();
+}
+
+function setupSelectors() {
+  const aSel = document.getElementById('aircraft-select');
+  const eSel = document.getElementById('engine-select');
+  if (!aSel || !eSel) return;
+  for (const [k, c] of Object.entries(AIRFRAMES)) { const o = document.createElement('option'); o.value = k; o.textContent = c.label; aSel.appendChild(o); }
+  for (const [k, c] of Object.entries(ENGINES))   { const o = document.createElement('option'); o.value = k; o.textContent = c.label; eSel.appendChild(o); }
+  aSel.value = currentAirframeKey; eSel.value = currentEngineKey;
+  aSel.addEventListener('change', () => setAirframe(aSel.value));
+  eSel.addEventListener('change', () => setEngine(eSel.value));
+}
+function syncSelectorUI() {
+  const aSel = document.getElementById('aircraft-select');
+  const eSel = document.getElementById('engine-select');
+  if (aSel) aSel.value = currentAirframeKey;
+  if (eSel) eSel.value = currentEngineKey;
+}
+
+setAirframe('b737-800');
+setEngine('cfm56-7b-proc');
+setupSelectors();
 
 /* =========================================================
    POST-PROCESSING — bloom para la llama de combustión
@@ -1586,23 +1675,24 @@ function updateEngineScroll() {
   const cowlOp = reveal * realism * (1 - nacelleOpen);
   for (const m of cowlDetailMats) m.opacity = cowlOp;
 
-  // Fase avión
+  // Fase avión — usa el motor activo (procedural o GLB seleccionado)
+  const eng = (currentEngineKey === 'procedural') ? engine : glbEngine;
   if (realPlaneReady) {
-    // Modelo 737 real: aparece en vuelo; el motor procedural se oculta al despegar
-    engine.visible = pe < 0.2;
-    engine.scale.setScalar(1); engine.position.set(0, 0, 0);
-    engine.rotation.y = -0.4; engine.rotation.x = 0.12;
+    // Modelo real: aparece en vuelo; el motor se oculta al despegar
+    eng.visible = pe < 0.2;
+    eng.scale.setScalar(1); eng.position.set(0, 0, 0);
+    eng.rotation.y = -0.4; eng.rotation.x = 0.12;
     realPlane.visible = pe > 0.02;
     const op = clamp01((pe - 0.05) / 0.4);
     const opq = op > 0.95;
     if (opq !== realOpaque) { realOpaque = opq; for (const m of realMats) { m.transparent = !opq; m.needsUpdate = true; } }
     for (const m of realMats) m.opacity = opq ? 1 : op;
   } else {
-    // (narrativa procedural original, mientras el .obj aún carga)
-    engine.scale.setScalar(1 - pe * 0.4);
-    engine.position.set(ENG_WING.x * pe, ENG_WING.y * pe, ENG_WING.z * pe);
-    engine.rotation.y = -0.4 * (1 - pe);
-    engine.rotation.x = 0.12 * (1 - pe);
+    // (narrativa procedural original, mientras el modelo aún carga)
+    eng.scale.setScalar(1 - pe * 0.4);
+    eng.position.set(ENG_WING.x * pe, ENG_WING.y * pe, ENG_WING.z * pe);
+    eng.rotation.y = -0.4 * (1 - pe);
+    eng.rotation.x = 0.12 * (1 - pe);
     aircraft.visible = pe > 0.001;
     for (const m of aircraftMats) m.opacity = pe * m.userData.baseOp;
     const opaque = pe > 0.85;

@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>CFM56-7B · 涡扇发动机解剖</title>
   <meta name="description" content="三维实景拆解一台 CFM56-7B 涡扇发动机。">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 
   <script type="importmap">
   {
     "imports": {
-      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      "three": "./vendor/three/three.module.js",
+      "three/addons/": "./vendor/three/jsm/"
     }
   }
   </script>
@@ -58,6 +56,18 @@
     <div class="hud-block hud-right">
       <span class="hud-key">SCROLL</span>
       <span class="hud-val"><span id="scroll-pct">000</span>%</span>
+    </div>
+  </div>
+
+  <!-- Selector: 机型 / 发动机 -->
+  <div class="selector-bar">
+    <div class="sel-group">
+      <span class="sel-key">机型</span>
+      <select id="aircraft-select" class="sel-select"></select>
+    </div>
+    <div class="sel-group">
+      <span class="sel-key">发动机</span>
+      <select id="engine-select" class="sel-select"></select>
     </div>
   </div>
 
