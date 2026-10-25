@@ -1308,6 +1308,18 @@ const tintMat = new THREE.MeshBasicMaterial({ color: 0xff4a1e, transparent: true
 const tintSphere = new THREE.Mesh(new THREE.SphereGeometry(240, 16, 12), tintMat);
 scene.add(tintSphere);
 
+/* ---- Banner de errores en pantalla (clave para depurar la carga de modelos) ---- */
+function showError(msg) {
+  const el = document.getElementById('err-banner');
+  if (!el) { console.error(msg); return; }
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show'); el.setAttribute('aria-hidden', 'false');
+  clearTimeout(showError._t);
+  showError._t = setTimeout(() => { el.classList.remove('show'); el.setAttribute('aria-hidden', 'true'); }, 9000);
+}
+window.addEventListener('error', (e) => showError('JS: ' + (e.message || e.error)));
+window.addEventListener('unhandledrejection', (e) => showError('Promise: ' + (e.reason && (e.reason.message || e.reason))));
+
 /* =========================================================
    SELECTOR · 机型 (airframe GLB/OBJ) + 发动机 (engine GLB)
    Todos los assets viven en model/. Se pueden cambiar en vivo.
@@ -1315,9 +1327,9 @@ scene.add(tintSphere);
 const AIRFRAMES = {
   'b737-800': { url: 'model/boeing_737-800.glb',     type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-800', engines: ['cfm56-7b-proc', 'cfm56-7b'] },
   'b737-700': { url: 'model/boeing_737-700.glb',     type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-700', engines: ['cfm56-7b-proc', 'cfm56-7b'] },
-  'a319':     { url: 'model/airbus_a319.glb',        type: 'glb', yaw: 0,            target: 26, label: 'Airbus A319',    engines: ['cfm56-7b-proc', 'cfm56-5b'] },
-  'crj200':   { url: 'model/bombardier_crj-200.glb', type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-200', engines: ['cfm56-7b-proc'] },
-  'crj700':   { url: 'model/bombardier_crj-700.glb', type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-700', engines: ['cfm56-7b-proc'] },
+  'a319':     { url: 'model/airbus_a319.glb',        type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Airbus A319',    engines: ['cfm56-7b-proc', 'cfm56-5b'] },
+  'crj200':   { url: 'model/bombardier_crj-200.glb', type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Bombardier CRJ-200', engines: ['cfm56-7b-proc'] },
+  'crj700':   { url: 'model/bombardier_crj-700.glb', type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Bombardier CRJ-700', engines: ['cfm56-7b-proc'] },
   // Nota: yaw/pitch son valores de partida — ajustar tras una pasada visual.
 };
 const ENGINES = {
@@ -1445,7 +1457,14 @@ function centerAndScale(obj, target) {
   const box = new THREE.Box3().setFromObject(obj);
   const center = box.getCenter(new THREE.Vector3());
   const size = box.getSize(new THREE.Vector3());
-  const k = target / (Math.max(size.x, size.y, size.z) || 1);
+  const maxDim = Math.max(size.x, size.y, size.z);
+  // NaN/Inf en el bounding box (vértices degenerados del modelo) dejaría la
+  // escala en NaN y el modelo invisible: si pasa, no tocamos la transformación.
+  if (!isFinite(maxDim) || maxDim <= 0 || !isFinite(center.x) || !isFinite(center.y) || !isFinite(center.z)) {
+    console.warn('centerAndScale: bbox inválido (NaN/Inf), se omite la normalización de', obj.name || obj);
+    return;
+  }
+  const k = target / maxDim;
   obj.scale.setScalar(k);
   obj.position.set(-center.x * k, -center.y * k, -center.z * k);
 }
@@ -1469,11 +1488,14 @@ let currentEngineKey = 'cfm56-7b-proc';
 const glbEngine = new THREE.Group();
 glbEngine.visible = false;
 flightGroup.add(glbEngine);
+let engineMixer = null;     // reproduce animaciones del GLB de motor (p.ej. CFM56-5B)
+let airframeMixer = null;   // reproduce animaciones del GLB de fuselaje
 
 function setAirframe(key) {
   const cfg = AIRFRAMES[key];
   if (!cfg) return;
-  const onObj = (obj) => {
+  const onObj = (obj, animations) => {
+    if (airframeMixer) { airframeMixer.stopAllAction(); airframeMixer = null; }
     if (realPlane) { flightGroup.remove(realPlane); disposeGroup(realPlane); }
     realMats.length = 0;
     centerAndScale(obj, cfg.target);
@@ -1483,12 +1505,16 @@ function setAirframe(key) {
     grp.visible = false;
     flightGroup.add(grp);
     prepMats(obj, realMats);
+    if (animations && animations.length) {
+      airframeMixer = new THREE.AnimationMixer(obj);
+      animations.forEach((c) => airframeMixer.clipAction(c).play());
+    }
     realPlane = grp;
     aircraft.visible = false;
     realPlaneReady = true;
     currentAirframeKey = key;
     syncSelectorUI();
-    console.log('airframe', key, 'listo');
+    console.log('airframe', key, 'listo · clips', animations ? animations.length : 0);
   };
   if (cfg.type === 'obj') {
     new MTLLoader().load(cfg.url.replace(/\.obj$/, '.mtl'), (materials) => {
@@ -1512,7 +1538,7 @@ function setAirframe(key) {
       }, undefined, (e) => console.error('Error cargando', cfg.url, e));
     }, undefined, (e) => console.error('Error MTL', cfg.url, e));
   } else {
-    gltfLoader.load(cfg.url, (gltf) => onObj(gltf.scene), undefined, (e) => console.error('Error GLB', cfg.url, e));
+    gltfLoader.load(cfg.url, (gltf) => onObj(gltf.scene, gltf.animations), undefined, (e) => { console.error('Error GLB', cfg.url, e); showError('机型模型加载失败: ' + cfg.url + ' — ' + (e && e.message ? e.message : e)); });
   }
 }
 
@@ -1521,29 +1547,36 @@ function setEngine(key) {
   if (!cfg) return;
   currentEngineKey = key;
   if (cfg.type === 'procedural') {
+    engine.visible = true;
     glbEngine.visible = false;
     labelLayer.style.display = '';
   } else {
     engine.visible = false;
     labelLayer.style.display = 'none';
     gltfLoader.load(cfg.url, (gltf) => {
+      if (engineMixer) { engineMixer.stopAllAction(); engineMixer = null; }
       while (glbEngine.children.length) { const c = glbEngine.children.pop(); disposeGroup(c); }
       const obj = gltf.scene;
       centerAndScale(obj, cfg.target);
       obj.rotation.set(cfg.pitch || 0, cfg.yaw || 0, 0);
       glbEngine.add(obj);
+      // Reproduce la animación del GLB (necesario para que modelos "animados"
+      // como el CFM56-5B muestren su geometría en la pose correcta).
+      if (gltf.animations && gltf.animations.length) {
+        engineMixer = new THREE.AnimationMixer(obj);
+        gltf.animations.forEach((c) => engineMixer.clipAction(c).play());
+      }
       // Prepara el "despiece falso" genérico: memoriza la posición base de cada
-      // sub-malla y deduce el eje largo del motor para el estiramiento axial.
+      // sub-malla (solo expansión radial; sin estiramiento axial).
       const parts = [];
       obj.traverse((o) => { if (o.isMesh) { o.userData._bp = o.position.clone(); parts.push(o); } });
       const _b = new THREE.Box3().setFromObject(obj);
       const _s = _b.getSize(new THREE.Vector3());
       glbEngine.userData.parts = parts;
       glbEngine.userData.longAxis = (_s.x >= _s.y && _s.x >= _s.z) ? 'x' : (_s.y >= _s.z ? 'y' : 'z');
-      glbEngine.userData.stretch = 1;
       glbEngine.visible = true;
-      console.log('engine', key, 'listo · partes', parts.length, '· eje', glbEngine.userData.longAxis);
-    }, undefined, (e) => console.error('Error engine GLB', cfg.url, e));
+      console.log('engine', key, 'listo · partes', parts.length, '· clips', gltf.animations ? gltf.animations.length : 0);
+    }, undefined, (e) => { console.error('Error engine GLB', cfg.url, e); showError('发动机模型加载失败: ' + cfg.url + ' — ' + (e && e.message ? e.message : e)); });
   }
   applyEngineSpecs(key);
   syncSelectorUI();
@@ -1553,20 +1586,16 @@ function setEngine(key) {
 // sub-malla se aleja radialmente del centro y el grupo se estira en su eje largo.
 function applyGlbExplode(e) {
   const parts = glbEngine.userData.parts;
-  if (!parts || currentEngineKey === 'procedural') return;
+  if (!parts || ENGINES[currentEngineKey]?.type === 'procedural') return;
   const spread = 1.5;
   for (const m of parts) {
     const bp = m.userData._bp;
     if (bp) m.position.copy(bp).addScaledVector(bp, spread * e);
   }
-  glbEngine.userData.stretch = 1 + e * 0.6;
 }
-// Escala del motor activo en la fase de vuelo: para GLB aplica el estiramiento axial.
+// Escala del motor activo en la fase de vuelo (sin estiramiento axial).
 function setEngScale(g, base) {
-  if (currentEngineKey === 'procedural') { g.scale.setScalar(base); return; }
-  const la = glbEngine.userData.longAxis || 'x';
-  g.scale.set(base, base, base);
-  g.scale[la] = base * (glbEngine.userData.stretch || 1);
+  g.scale.setScalar(base);
 }
 
 function refreshEngineOptions(airKey) {
@@ -1630,6 +1659,8 @@ composer.addPass(new OutputPass());
 const clock = new THREE.Clock();
 function tick() {
   const dt = clock.getDelta();
+  if (engineMixer) engineMixer.update(dt);      // animación del motor GLB (p.ej. CFM56-5B)
+  if (airframeMixer) airframeMixer.update(dt);   // animación del fuselaje GLB
 
   // Rotación de los rotores (fan, compresores, turbinas) — visible también al despiezar
   const spin = dt * currentFanSpeed * 5.0;   // multiplicador global de visibilidad
@@ -1830,7 +1861,7 @@ function updateEngineScroll() {
   for (const m of cowlDetailMats) m.opacity = cowlOp;
 
   // Fase avión — usa el motor activo (procedural o GLB seleccionado)
-  const eng = (currentEngineKey === 'procedural') ? engine : glbEngine;
+  const eng = (ENGINES[currentEngineKey]?.type === 'procedural') ? engine : glbEngine;
   if (realPlaneReady) {
     // Modelo real: aparece en vuelo; el motor se oculta al despegar
     eng.visible = pe < 0.2;

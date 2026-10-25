@@ -698,3 +698,12 @@ body::before {
   border-radius:6px; padding:5px 8px; font-family: var(--mono); font-size:12px; outline:none; cursor:pointer;
 }
 .sel-select:focus{ border-color:#7fd3ff; }
+
+/* ---- Banner de errores ---- */
+.err-banner{
+  position: fixed; left: 50%; top: 14px; transform: translateX(-50%); z-index: 200;
+  max-width: 90vw; padding: 10px 14px; background: rgba(120,20,20,.94); color: #fff;
+  border: 1px solid rgba(255,120,120,.6); border-radius: 8px; font-family: var(--mono);
+  font-size: 12px; line-height: 1.5; display: none; white-space: pre-wrap; box-shadow: 0 6px 20px rgba(0,0,0,.4);
+}
+.err-banner.show{ display: block; }
