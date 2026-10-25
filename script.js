@@ -1313,16 +1313,118 @@ scene.add(tintSphere);
    Todos los assets viven en model/. Se pueden cambiar en vivo.
    ========================================================= */
 const AIRFRAMES = {
-  'b737-800': { url: 'model/plane.obj',               type: 'obj', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-800' },
-  'b737-700': { url: 'model/boeing_737-700.glb',      type: 'glb', yaw: 0,            target: 26, label: 'Boeing 737-700' },
-  'a319':     { url: 'model/airbus_a319.glb',         type: 'glb', yaw: 0,            target: 26, label: 'Airbus A319' },
-  'crj200':   { url: 'model/bombardier_crj-200.glb',  type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-200' },
+  'b737-800': { url: 'model/boeing_737-800.glb',     type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-800', engines: ['cfm56-7b-proc', 'cfm56-7b'] },
+  'b737-700': { url: 'model/boeing_737-700.glb',     type: 'glb', yaw: -Math.PI / 2, target: 26, label: 'Boeing 737-700', engines: ['cfm56-7b-proc', 'cfm56-7b'] },
+  'a319':     { url: 'model/airbus_a319.glb',        type: 'glb', yaw: 0,            target: 26, label: 'Airbus A319',    engines: ['cfm56-7b-proc', 'cfm56-5b'] },
+  'crj200':   { url: 'model/bombardier_crj-200.glb', type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-200', engines: ['cfm56-7b-proc'] },
+  'crj700':   { url: 'model/bombardier_crj-700.glb', type: 'glb', yaw: 0,            target: 26, label: 'Bombardier CRJ-700', engines: ['cfm56-7b-proc'] },
+  // Nota: yaw/pitch son valores de partida — ajustar tras una pasada visual.
 };
 const ENGINES = {
-  'cfm56-7b-proc': { type: 'procedural',                                          label: 'CFM56-7B（程序化解剖）' },
-  'cfm56-7b':      { url: 'model/cfm56-7b.glb', type: 'glb', yaw: 0, pitch: 0, target: 3.0, label: 'CFM56-7B（模型）' },
-  'cfm56-5b':      { url: 'model/cfm56-5b.glb',  type: 'glb', yaw: 0, pitch: 0, target: 3.0, label: 'CFM56-5B（模型）' },
+  'cfm56-7b-proc': { type: 'procedural', spec: 'cfm56-7b', label: 'CFM56-7B（程序化解剖）' },
+  'cfm56-7b':      { url: 'model/cfm56-7b.glb', type: 'glb', yaw: 0, pitch: 0, target: 3.0, spec: 'cfm56-7b', label: 'CFM56-7B（模型）' },
+  'cfm56-5b':      { url: 'model/cfm56-5b.glb', type: 'glb', yaw: 0, pitch: 0, target: 3.0, spec: 'cfm56-5b', label: 'CFM56-5B（模型）' },
 };
+
+// Parámetros por familia de motor — alimentan el hero y la sección de specs.
+const ENGINE_SPECS = {
+  'cfm56-7b': {
+    doc: 'CFM56-7B26 / SHT 01 OF 03',
+    eyebrow: 'CFM INTERNATIONAL · GE × SAFRAN · 1995',
+    title: 'CFM56', sub: '-7B',
+    brand: 'CFM56-7B',
+    source: '数据来源：CFM International、FAA TCDS E00055EN、Boeing 737NG AMM。',
+    meta: [['1.55 m', '风扇直径'], ['32.8:1', '增压比'], ['1500 °C', '燃烧温度'], ['14460 RPM', '高压轴转速']],
+    specs: [
+      { c: 121,   u: 'kN',  l: '最大起飞推力' },
+      { c: 14460, u: 'RPM', l: '高压轴转速 (100%)' },
+      { c: 5175,  u: 'RPM', l: '低压轴转速 (100%)' },
+      { c: 32.8,  d: 1, u: ':1', l: '增压比' },
+      { c: 5.5,   d: 1, u: ':1', l: '涵道比' },
+      { c: 397,   u: 'kg/s', l: '进气流量' },
+      { c: 1500,  u: '°C',  l: '燃烧室温度' },
+      { c: 2386,  u: 'kg',  l: '干重' },
+      { c: 2.51,  d: 2, u: 'm', l: '长度' },
+      { c: 1.55,  d: 2, u: 'm', l: '风扇直径' },
+      { c: 24,    u: '', l: '风扇叶片数' },
+      { c: 9,     u: '', l: '高压压气机级数' },
+    ],
+  },
+  'cfm56-5b': {
+    doc: 'CFM56-5B / A319 · SHT 02 OF 03',
+    eyebrow: 'CFM INTERNATIONAL · GE × SAFRAN · 1988',
+    title: 'CFM56', sub: '-5B',
+    brand: 'CFM56-5B',
+    source: '数据来源：CFM International、EASA TCDS E.046、Airbus A319 AMM。',
+    meta: [['1.73 m', '风扇直径'], ['31.5:1', '增压比'], ['1450 °C', '燃烧温度'], ['15000 RPM', '高压轴转速']],
+    specs: [
+      { c: 120,   u: 'kN',  l: '最大起飞推力' },
+      { c: 15000, u: 'RPM', l: '高压轴转速 (100%)' },
+      { c: 5200,  u: 'RPM', l: '低压轴转速 (100%)' },
+      { c: 31.5,  d: 1, u: ':1', l: '增压比' },
+      { c: 5.7,   d: 1, u: ':1', l: '涵道比' },
+      { c: 355,   u: 'kg/s', l: '进气流量' },
+      { c: 1450,  u: '°C',  l: '燃烧室温度' },
+      { c: 2400,  u: 'kg',  l: '干重' },
+      { c: 2.43,  d: 2, u: 'm', l: '长度' },
+      { c: 1.73,  d: 2, u: 'm', l: '风扇直径' },
+      { c: 36,    u: '', l: '风扇叶片数' },
+      { c: 9,     u: '', l: '高压压气机级数' },
+    ],
+  },
+};
+
+// Inyecta en el DOM los parámetros del motor seleccionado (hero + specs + HUD).
+function applyEngineSpecs(key) {
+  const eng = ENGINES[key];
+  if (!eng) return;
+  const s = ENGINE_SPECS[eng.spec] || ENGINE_SPECS['cfm56-7b'];
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('hero-eyebrow', s.eyebrow);
+  const ht = document.getElementById('hero-title');
+  if (ht) ht.innerHTML = s.title + '<span class="dim">' + s.sub + '</span>';
+  set('hero-sub', '高涵道比涡扇发动机解剖 — 三维可视化');
+  const hm = document.getElementById('hero-meta');
+  if (hm) hm.innerHTML = s.meta.map(([v, l]) => `<li><b>${v}</b> ${l}</li>`).join('');
+  set('doc-readout', s.doc);
+  set('specs-eyebrow', '技术规格 · ' + s.title + s.sub);
+  document.title = s.brand + ' · 涡扇发动机解剖';
+  const desc = document.querySelector('meta[name="description"]');
+  if (desc) desc.setAttribute('content', '三维实景拆解一台 ' + s.brand + ' 涡扇发动机。');
+  set('footer-brand', s.brand);
+  set('specs-source', s.source);
+  const grid = document.querySelector('.specs-grid');
+  if (grid) grid.innerHTML = s.specs.map((sp) =>
+    `<div class="spec"><span class="spec-num" data-count="${sp.c}"${sp.d ? ` data-decimals="${sp.d}"` : ''}>0</span><span class="spec-unit">${sp.u}</span><span class="spec-label">${sp.l}</span></div>`
+  ).join('');
+  runSpecCounters();
+}
+
+// Anima los contadores y la entrada de la sección specs (al entrar en viewport).
+function runSpecCounters() {
+  const specsEl = document.querySelector('.specs');
+  if (!specsEl) return;
+  const animateOnce = () => {
+    $$('.specs .spec-num').forEach((el) => {
+      const target = parseFloat(el.dataset.count);
+      const decimals = parseInt(el.dataset.decimals || '0', 10);
+      const obj = { v: 0 };
+      animate(obj, {
+        v: target, duration: 1600, ease: 'outExpo',
+        onUpdate: () => { el.textContent = obj.v.toLocaleString('zh-CN', { minimumFractionDigits: decimals, maximumFractionDigits: decimals }); },
+      });
+    });
+    animate('.specs .eyebrow', { opacity: [0, 1], y: [16, 0], duration: 700, ease: 'outExpo' });
+    animate('.specs h2',       { opacity: [0, 1], y: [24, 0], duration: 800, ease: 'outExpo' });
+    animate('.spec',           { opacity: [0, 1], y: [30, 0], duration: 700, ease: 'outExpo', delay: stagger(70) });
+  };
+  if ('IntersectionObserver' in window) {
+    const io = new IntersectionObserver((entries) => {
+      for (const e of entries) if (e.isIntersecting) { animateOnce(); io.disconnect(); break; }
+    }, { threshold: 0.1 });
+    io.observe(specsEl);
+  } else { animateOnce(); }
+}
 
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath('./vendor/three/jsm/libs/draco/');
@@ -1443,6 +1545,7 @@ function setEngine(key) {
       console.log('engine', key, 'listo · partes', parts.length, '· eje', glbEngine.userData.longAxis);
     }, undefined, (e) => console.error('Error engine GLB', cfg.url, e));
   }
+  applyEngineSpecs(key);
   syncSelectorUI();
 }
 
@@ -1466,21 +1569,40 @@ function setEngScale(g, base) {
   g.scale[la] = base * (glbEngine.userData.stretch || 1);
 }
 
+function refreshEngineOptions(airKey) {
+  const eSel = document.getElementById('engine-select');
+  if (!eSel) return;
+  eSel.innerHTML = '';
+  for (const ek of AIRFRAMES[airKey].engines) {
+    const o = document.createElement('option');
+    o.value = ek; o.textContent = ENGINES[ek].label;
+    eSel.appendChild(o);
+  }
+}
 function setupSelectors() {
   const aSel = document.getElementById('aircraft-select');
   const eSel = document.getElementById('engine-select');
   if (!aSel || !eSel) return;
   for (const [k, c] of Object.entries(AIRFRAMES)) { const o = document.createElement('option'); o.value = k; o.textContent = c.label; aSel.appendChild(o); }
-  for (const [k, c] of Object.entries(ENGINES))   { const o = document.createElement('option'); o.value = k; o.textContent = c.label; eSel.appendChild(o); }
-  aSel.value = currentAirframeKey; eSel.value = currentEngineKey;
-  aSel.addEventListener('change', () => setAirframe(aSel.value));
+  aSel.value = currentAirframeKey;
+  refreshEngineOptions(currentAirframeKey);
+  eSel.value = currentEngineKey;
+  aSel.addEventListener('change', () => {
+    currentAirframeKey = aSel.value;
+    const def = AIRFRAMES[currentAirframeKey].engines[0];   // motor por defecto emparejado
+    currentEngineKey = def;
+    refreshEngineOptions(currentAirframeKey);
+    eSel.value = def;
+    setAirframe(currentAirframeKey);
+    setEngine(def);
+  });
   eSel.addEventListener('change', () => setEngine(eSel.value));
 }
 function syncSelectorUI() {
   const aSel = document.getElementById('aircraft-select');
   const eSel = document.getElementById('engine-select');
   if (aSel) aSel.value = currentAirframeKey;
-  if (eSel) eSel.value = currentEngineKey;
+  if (eSel) { refreshEngineOptions(currentAirframeKey); eSel.value = currentEngineKey; }
 }
 
 setAirframe('b737-800');
@@ -1783,26 +1905,6 @@ function onReveal(el, cb, threshold = 0.2) {
   io.observe(el);
 }
 
-$$('.spec-num').forEach(el => {
-  const target = parseFloat(el.dataset.count);
-  const decimals = parseInt(el.dataset.decimals || '0', 10);
-  onReveal(el, () => {
-    const obj = { v: 0 };
-    animate(obj, {
-      v: target,
-      duration: 1600, ease: 'outExpo',
-      onUpdate: () => {
-        el.textContent = obj.v.toLocaleString('zh-CN', {
-          minimumFractionDigits: decimals,
-          maximumFractionDigits: decimals,
-        });
-      },
-    });
-  });
-});
+// Los contadores de specs ahora se animan desde applyEngineSpecs() → runSpecCounters()
+// (se reconstruyen al cambiar de motor y se revelan al entrar en viewport).
 
-onReveal($('.specs'), () => {
-  animate('.specs .eyebrow', { opacity: [0, 1], y: [16, 0], duration: 700, ease: 'outExpo' });
-  animate('.specs h2',       { opacity: [0, 1], y: [24, 0], duration: 800, ease: 'outExpo' });
-  animate('.spec',           { opacity: [0, 1], y: [30, 0], duration: 700, ease: 'outExpo', delay: stagger(70) });
-}, 0.1);

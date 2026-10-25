@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CFM56-7B · 涡扇发动机解剖</title>
-  <meta name="description" content="三维实景拆解一台 CFM56-7B 涡扇发动机。">
+  <title id="page-title">CFM56-7B · 涡扇发动机解剖</title>
+  <meta name="description" id="page-desc" content="三维实景拆解一台 CFM56-7B 涡扇发动机。">
   <link rel="stylesheet" href="vendor/fonts/fonts.css">
   <link rel="stylesheet" href="styles.css">
 
@@ -39,7 +39,7 @@
   <div class="hud">
     <div class="hud-block">
       <span class="hud-key">DOC</span>
-      <span class="hud-val">CFM56-7B26 / SHT 01 OF 03</span>
+      <span class="hud-val" id="doc-readout">CFM56-7B26 / SHT 01 OF 03</span>
     </div>
     <div class="hud-block">
       <span class="hud-key">MODE</span>
@@ -146,10 +146,10 @@
   <!-- ============================================ -->
   <section class="hero" id="top">
     <div class="hero-inner">
-      <p class="eyebrow">CFM INTERNATIONAL · GE × SAFRAN · 1995</p>
+      <p class="eyebrow" id="hero-eyebrow">CFM INTERNATIONAL · GE × SAFRAN · 1995</p>
       <h1 class="hero-title" id="hero-title">CFM56<span class="dim">-7B</span></h1>
-      <p class="hero-sub">高涵道比涡扇发动机解剖 — 三维可视化</p>
-      <ul class="hero-meta">
+      <p class="hero-sub" id="hero-sub">高涵道比涡扇发动机解剖 — 三维可视化</p>
+      <ul class="hero-meta" id="hero-meta">
         <li><b>1.55 m</b> 风扇直径</li>
         <li><b>33 atm</b> 增压比</li>
         <li><b>1500 °C</b> 燃烧温度</li>
@@ -181,7 +181,7 @@
   <!-- 3 · SPECS                                    -->
   <!-- ============================================ -->
   <section class="specs">
-    <p class="eyebrow">技术规格 · CFM56-7B26</p>
+    <p class="eyebrow" id="specs-eyebrow">技术规格 · CFM56-7B26</p>
     <h2>精确数据，毫厘不差。</h2>
     <div class="specs-grid">
       <div class="spec"><span class="spec-num" data-count="121">0</span><span class="spec-unit">kN</span><span class="spec-label">最大起飞推力</span></div>
@@ -198,7 +198,7 @@
       <div class="spec"><span class="spec-num" data-count="9">0</span><span class="spec-unit"></span><span class="spec-label">高压压气机级数</span></div>
     </div>
     <p class="specs-footer">
-      数据来源：CFM International、FAA TCDS E00055EN、Boeing 737NG AMM。
+      <span id="specs-source">数据来源：CFM International、FAA TCDS E00055EN、Boeing 737NG AMM。</span>
       <br>使用 <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> 渲染，
       动画由 <a href="https://animejs.com" target="_blank" rel="noopener">anime.js v4</a> 制作。
     </p>
@@ -209,7 +209,7 @@
   <!-- ============================================ -->
   <footer class="site-footer">
     <div class="footer-inner">
-      <div class="footer-brand">CFM56<span class="dim">·7B</span></div>
+      <div class="footer-brand" id="footer-brand">CFM56·7B</div>
       <p class="footer-note">
         交互式三维可视化 · 非 CFM International 官方资料。<br>
         使用 three.js + anime.js v4 制作。
