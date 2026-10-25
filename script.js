@@ -837,14 +837,14 @@ document.body.appendChild(labelLayer);
 
 // up = cartel arriba/abajo · stem = longitud de la guía (alterna para no solaparse)
 const PARTS = [
-  { obj: spinner,   up: true,  stem: 50,  name: 'CONO DE ENTRADA',      desc: 'Reparte el aire entrante y evita que se forme hielo en el morro.' },
-  { obj: fanBlades, up: false, stem: 64,  name: 'FAN',                  desc: '24 álabes. Aspira el aire y genera ~80 % del empuje (flujo de bypass).' },
-  { obj: lpc,       up: true,  stem: 130, name: 'COMPRESOR DE BAJA',    desc: 'Booster de 3 etapas. Precomprime el aire que entra al núcleo.' },
-  { obj: hpc,       up: false, stem: 132, name: 'COMPRESOR DE ALTA',    desc: '9 etapas. Eleva la presión del aire hasta ~33 atm.' },
-  { obj: combustor, up: true,  stem: 50,  name: 'CÁMARA DE COMBUSTIÓN', desc: 'Mezcla y quema el queroseno a ~1500 °C.' },
-  { obj: hpt,       up: false, stem: 64,  name: 'TURBINA DE ALTA',      desc: '1 etapa. Mueve el compresor de alta por el eje HP.' },
-  { obj: lpt,       up: true,  stem: 132, name: 'TURBINA DE BAJA',      desc: '4 etapas. Acciona el fan y el booster por el eje LP.' },
-  { obj: exhaust,   up: false, stem: 130, name: 'TOBERA DE ESCAPE',     desc: 'Mezcla y expulsa los gases: el empuje del núcleo.' },
+  { obj: spinner,   up: true,  stem: 50,  name: '进气锥',     desc: '分配进气并防止机头部位结冰。' },
+  { obj: fanBlades, up: false, stem: 64,  name: '风扇',       desc: '24 片叶片。吸入空气并产生约 80% 的推力（外涵道气流）。' },
+  { obj: lpc,       up: true,  stem: 130, name: '低压压气机', desc: '3 级增压级。对进入核心机的空气进行预压缩。' },
+  { obj: hpc,       up: false, stem: 132, name: '高压压气机', desc: '9 级。将空气压力提升至约 33 个大气压。' },
+  { obj: combustor, up: true,  stem: 50,  name: '燃烧室',     desc: '在约 1500 °C 下混合并燃烧煤油。' },
+  { obj: hpt,       up: false, stem: 64,  name: '高压涡轮',   desc: '1 级。通过高压轴驱动高压压气机。' },
+  { obj: lpt,       up: true,  stem: 132, name: '低压涡轮',   desc: '4 级。通过低压轴驱动风扇与增压级。' },
+  { obj: exhaust,   up: false, stem: 130, name: '尾喷管',     desc: '混合并排出燃气：核心机产生的推力。' },
 ];
 const _lblPos = new THREE.Vector3();
 PARTS.forEach(p => {
@@ -1635,8 +1635,8 @@ function updateEngineScroll() {
   /* HUD */
   if (disasmPct) disasmPct.textContent = Math.round(explodeAmount * 100) + '%';
   if (posMarker) posMarker.style.left = (explodeAmount * 100) + '%';
-  modeReadout.textContent = plane > 0.5 ? 'VUELO'
-    : (realism > 0.5 ? 'REAL' : (explodeAmount > 0.04 ? 'DESPIEZANDO' : 'TÉCNICO'));
+  modeReadout.textContent = plane > 0.5 ? '飞行'
+    : (realism > 0.5 ? '实景' : (explodeAmount > 0.04 ? '分解中' : '技术'));
 }
 window.addEventListener('scroll', updateEngineScroll, { passive: true });
 window.addEventListener('resize', updateEngineScroll);
@@ -1670,7 +1670,7 @@ $$('.spec-num').forEach(el => {
       v: target,
       duration: 1600, ease: 'outExpo',
       onUpdate: () => {
-        el.textContent = obj.v.toLocaleString('es-ES', {
+        el.textContent = obj.v.toLocaleString('zh-CN', {
           minimumFractionDigits: decimals,
           maximumFractionDigits: decimals,
         });

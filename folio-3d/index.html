@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="es">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>FOLIO·3D — Patio de física</title>
-    <meta name="description" content="Portfolio 3D interactivo con Three.js + Rapier. Conduce y choca." />
+    <title>FOLIO·3D — 物理游乐场</title>
+    <meta name="description" content="基于 Three.js + Rapier 的交互式三维作品集。驾驶并碰撞。" />
   </head>
   <body class="bg-[#11151f] text-zinc-100 overflow-hidden antialiased">
     <!-- ===== Canvas WebGL ===== -->
@@ -31,11 +31,11 @@
            class="absolute bottom-6 left-1/2 -translate-x-1/2 opacity-0
                   flex items-center gap-2 text-[0.7rem] tracking-wider text-zinc-300">
         <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">W A S D</kbd>
-        <span class="text-zinc-500">conducir</span>
+        <span class="text-zinc-500">驾驶</span>
         <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">⇧</kbd>
-        <span class="text-zinc-500">turbo</span>
+        <span class="text-zinc-500">加速</span>
         <kbd class="px-2 py-1 rounded bg-white/5 border border-white/10">R</kbd>
-        <span class="text-zinc-500">reiniciar</span>
+        <span class="text-zinc-500">重置</span>
       </div>
 
       <!-- Panel de proyecto (se despliega al acercarse a un portal) -->
@@ -44,7 +44,7 @@
                     opacity-0 pointer-events-none
                     rounded-2xl border border-white/10 bg-[#161b27]/80 backdrop-blur-xl
                     p-6 shadow-2xl shadow-black/40">
-        <p id="project-tag" class="text-[0.65rem] tracking-[0.3em] text-orange-400 mb-2">PROYECTO</p>
+        <p id="project-tag" class="text-[0.65rem] tracking-[0.3em] text-orange-400 mb-2">项目</p>
         <h2 id="project-title" class="text-xl font-semibold mb-2">—</h2>
         <p id="project-desc" class="text-sm leading-relaxed text-zinc-300">—</p>
         <div id="project-tags" class="mt-4 flex flex-wrap gap-2 text-[0.65rem]"></div>
@@ -56,21 +56,21 @@
                   flex flex-col items-center justify-center text-center
                   bg-[#0c0f17]">
         <p id="intro-eyebrow" class="opacity-0 text-[0.7rem] tracking-[0.4em] text-zinc-500 mb-6">
-          PATIO DE FÍSICA INTERACTIVO
+          交互式物理游乐场
         </p>
         <h1 id="intro-title" class="text-6xl md:text-8xl font-bold tracking-tight mb-4">
           FOLIO<span class="text-orange-400">·</span>3D
         </h1>
         <p id="intro-sub" class="opacity-0 text-zinc-400 max-w-md mb-10 px-6">
-          Un mundo 3D con física real. Conduce el coche, embiste las cajas
-          y acércate a los portales para descubrir cada proyecto.
+          一个拥有真实物理的世界。驾驶汽车、撞开箱子，
+          靠近传送门即可发现每个项目。
         </p>
         <button id="intro-btn"
                 class="opacity-0 group inline-flex items-center gap-3 rounded-full
                        border border-white/15 bg-white/5 px-7 py-3 text-sm tracking-widest
                        hover:bg-orange-400 hover:text-black hover:border-orange-400
                        transition-colors duration-300">
-          ENTRAR
+          进入
           <span class="transition-transform group-hover:translate-x-1">→</span>
         </button>
       </div>

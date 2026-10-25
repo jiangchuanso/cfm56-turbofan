@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CFM56-7B · Anatomía de un turbofán</title>
-  <meta name="description" content="Disecciona por dentro un motor a reacción CFM56-7B en 3D real.">
+  <title>CFM56-7B · 涡扇发动机解剖</title>
+  <meta name="description" content="三维实景拆解一台 CFM56-7B 涡扇发动机。">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -45,15 +45,15 @@
     </div>
     <div class="hud-block">
       <span class="hud-key">MODE</span>
-      <span class="hud-val" id="mode-readout">RENDER</span>
+      <span class="hud-val" id="mode-readout">技术</span>
     </div>
     <div class="hud-block">
       <span class="hud-key">CAM</span>
-      <span class="hud-val" id="cam-readout">ORBIT</span>
+      <span class="hud-val" id="cam-readout">环绕</span>
     </div>
     <div class="hud-block">
       <span class="hud-key">INPUT</span>
-      <span class="hud-val">DRAG · ROTATE</span>
+      <span class="hud-val">拖拽 · 旋转</span>
     </div>
     <div class="hud-block hud-right">
       <span class="hud-key">SCROLL</span>
@@ -101,13 +101,13 @@
           <circle cx="0" cy="0" r="7" class="hud-hub"/>
         </g>
       </svg>
-      <span class="ovl-rpm">FAN · <span id="rpm-readout">0000</span> RPM</span>
+      <span class="ovl-rpm">风扇 · <span id="rpm-readout">0000</span> RPM</span>
     </div>
 
     <!-- Bottom-right disassembly progress -->
     <div class="ovl-pos">
       <div class="pos-meta">
-        <span>DESPIECE · <span id="disasm-pct">0%</span></span>
+        <span>分解 · <span id="disasm-pct">0%</span></span>
       </div>
       <div class="pos-track">
         <span class="pos-tick" style="--i:0"></span>
@@ -138,15 +138,15 @@
     <div class="hero-inner">
       <p class="eyebrow">CFM INTERNATIONAL · GE × SAFRAN · 1995</p>
       <h1 class="hero-title" id="hero-title">CFM56<span class="dim">-7B</span></h1>
-      <p class="hero-sub">Anatomía de un turbofán de alto bypass — en 3D</p>
+      <p class="hero-sub">高涵道比涡扇发动机解剖 — 三维可视化</p>
       <ul class="hero-meta">
-        <li><b>1,55 m</b> Ø fan</li>
-        <li><b>33 atm</b> presión</li>
-        <li><b>1500 °C</b> combustión</li>
-        <li><b>14 460 RPM</b> eje HP</li>
+        <li><b>1.55 m</b> 风扇直径</li>
+        <li><b>33 atm</b> 增压比</li>
+        <li><b>1500 °C</b> 燃烧温度</li>
+        <li><b>14 460 RPM</b> 高压轴</li>
       </ul>
       <div class="hero-scroll">
-        <span class="hero-scroll-label">SCROLL · LO REVELA</span>
+        <span class="hero-scroll-label">滚动 · 展开揭秘</span>
         <svg width="14" height="44" viewBox="0 0 14 44" fill="none">
           <line x1="7" y1="2" x2="7" y2="36" stroke="currentColor" stroke-width="1.2"/>
           <polyline points="2,30 7,38 12,30" stroke="currentColor" stroke-width="1.2" fill="none"/>
@@ -161,9 +161,9 @@
   <!-- ============================================ -->
   <section class="stage" id="stage">
     <div class="stage-caption">
-      <p class="eyebrow">DESPIECE INTERACTIVO</p>
-      <h2>El motor, al desnudo.</h2>
-      <p class="stage-hint">Haz scroll para descomponerlo pieza a pieza<br>arrastra para orbitar a su alrededor</p>
+      <p class="eyebrow">交互式分解</p>
+      <h2>发动机，一览无余。</h2>
+      <p class="stage-hint">滚动以逐件拆解<br>拖拽以环绕观察</p>
     </div>
   </section>
 
@@ -171,26 +171,26 @@
   <!-- 3 · SPECS                                    -->
   <!-- ============================================ -->
   <section class="specs">
-    <p class="eyebrow">FICHA TÉCNICA · CFM56-7B26</p>
-    <h2>Los números, sin redondear.</h2>
+    <p class="eyebrow">技术规格 · CFM56-7B26</p>
+    <h2>精确数据，毫厘不差。</h2>
     <div class="specs-grid">
-      <div class="spec"><span class="spec-num" data-count="121">0</span><span class="spec-unit">kN</span><span class="spec-label">Empuje máx. al despegue</span></div>
-      <div class="spec"><span class="spec-num" data-count="14460">0</span><span class="spec-unit">RPM</span><span class="spec-label">Eje HP (100 %)</span></div>
-      <div class="spec"><span class="spec-num" data-count="5175">0</span><span class="spec-unit">RPM</span><span class="spec-label">Eje LP (100 %)</span></div>
-      <div class="spec"><span class="spec-num" data-count="32.8" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">Ratio de compresión</span></div>
-      <div class="spec"><span class="spec-num" data-count="5.5" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">Bypass ratio</span></div>
-      <div class="spec"><span class="spec-num" data-count="397">0</span><span class="spec-unit">kg/s</span><span class="spec-label">Aire aspirado</span></div>
-      <div class="spec"><span class="spec-num" data-count="1500">0</span><span class="spec-unit">°C</span><span class="spec-label">Temp. de cámara</span></div>
-      <div class="spec"><span class="spec-num" data-count="2386">0</span><span class="spec-unit">kg</span><span class="spec-label">Peso seco</span></div>
-      <div class="spec"><span class="spec-num" data-count="2.51" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">Longitud</span></div>
-      <div class="spec"><span class="spec-num" data-count="1.55" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">Diámetro fan</span></div>
-      <div class="spec"><span class="spec-num" data-count="24">0</span><span class="spec-unit"></span><span class="spec-label">Álabes del fan</span></div>
-      <div class="spec"><span class="spec-num" data-count="9">0</span><span class="spec-unit"></span><span class="spec-label">Etapas HPC</span></div>
+      <div class="spec"><span class="spec-num" data-count="121">0</span><span class="spec-unit">kN</span><span class="spec-label">最大起飞推力</span></div>
+      <div class="spec"><span class="spec-num" data-count="14460">0</span><span class="spec-unit">RPM</span><span class="spec-label">高压轴转速 (100%)</span></div>
+      <div class="spec"><span class="spec-num" data-count="5175">0</span><span class="spec-unit">RPM</span><span class="spec-label">低压轴转速 (100%)</span></div>
+      <div class="spec"><span class="spec-num" data-count="32.8" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">增压比</span></div>
+      <div class="spec"><span class="spec-num" data-count="5.5" data-decimals="1">0</span><span class="spec-unit">:1</span><span class="spec-label">涵道比</span></div>
+      <div class="spec"><span class="spec-num" data-count="397">0</span><span class="spec-unit">kg/s</span><span class="spec-label">进气流量</span></div>
+      <div class="spec"><span class="spec-num" data-count="1500">0</span><span class="spec-unit">°C</span><span class="spec-label">燃烧室温度</span></div>
+      <div class="spec"><span class="spec-num" data-count="2386">0</span><span class="spec-unit">kg</span><span class="spec-label">干重</span></div>
+      <div class="spec"><span class="spec-num" data-count="2.51" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">长度</span></div>
+      <div class="spec"><span class="spec-num" data-count="1.55" data-decimals="2">0</span><span class="spec-unit">m</span><span class="spec-label">风扇直径</span></div>
+      <div class="spec"><span class="spec-num" data-count="24">0</span><span class="spec-unit"></span><span class="spec-label">风扇叶片数</span></div>
+      <div class="spec"><span class="spec-num" data-count="9">0</span><span class="spec-unit"></span><span class="spec-label">高压压气机级数</span></div>
     </div>
     <p class="specs-footer">
-      Fuentes: CFM International, FAA TCDS E00055EN, Boeing 737NG AMM.
-      <br>Render con <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a>,
-      animaciones con <a href="https://animejs.com" target="_blank" rel="noopener">anime.js v4</a>.
+      数据来源：CFM International、FAA TCDS E00055EN、Boeing 737NG AMM。
+      <br>使用 <a href="https://threejs.org" target="_blank" rel="noopener">three.js</a> 渲染，
+      动画由 <a href="https://animejs.com" target="_blank" rel="noopener">anime.js v4</a> 制作。
     </p>
   </section>
 
@@ -201,10 +201,10 @@
     <div class="footer-inner">
       <div class="footer-brand">CFM56<span class="dim">·7B</span></div>
       <p class="footer-note">
-        Visualización 3D interactiva · no es material oficial de CFM International.<br>
-        Hecho con three.js + anime.js v4.
+        交互式三维可视化 · 非 CFM International 官方资料。<br>
+        使用 three.js + anime.js v4 制作。
       </p>
-      <a class="footer-top" href="#top">↑ Volver arriba</a>
+      <a class="footer-top" href="#top">↑ 返回顶部</a>
     </div>
   </footer>
 
