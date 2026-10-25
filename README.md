@@ -14,6 +14,9 @@ python3 -m http.server 8000
 # 打开 http://127.0.0.1:8000
 ```
 
+> 截帧脚本 `capture-video.py` 同样连接该 8000 端口的本地服务器（可用环境变量
+> `CFM56_URL` 覆盖，例如 `CFM56_URL=http://localhost:8123 python capture-video.py`）。
+
 ## 部署到 Tomcat
 本项目是纯静态前端，无需后端代码，打包为 WAR 即可部署到 Tomcat（已按
 Servlet 4.0 / Tomcat 9 配置 `WEB-INF/web.xml`，由 Tomcat 内置的
@@ -27,7 +30,10 @@ Artifact（标签推送时还会发布为 Release）产出。
 - **手动触发**：在仓库 **Actions → Build WAR → Run workflow**，可选 `name`
   （默认 `cfm56`；填 `ROOT` 则作为根应用部署）。
 - **产物**：`cfm56.war` → 上下文路径 `/cfm56`；`ROOT.war` → `http://host:8080/`。
-- 本地仍保留 `build-war.ps1` 作为同一套构建逻辑的事实来源，供需要离线构建时使用。
+- `build-war.ps1` 已移除，打包逻辑完全内联在 `.github/workflows/build-war.yml`
+  中（PowerShell 步骤），无需本机脚本。
+- 如需离线构建，可直接在 PowerShell 中执行工作流内联的打包步骤（拷贝上述 6 个
+  静态资源 + `WEB-INF/web.xml` 到暂存区，再 `Compress-Archive` 并重命名为 `.war`）。
 
 工作流收集的静态资源为：`index.html`、`script.js`、`styles.css`、
 `plane.obj`、`plane.mtl`、`sky.hdr` 与 `WEB-INF/web.xml`，自动排除

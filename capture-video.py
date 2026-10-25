@@ -1,13 +1,16 @@
 """Captura determinista de la web CFM56 (scroll-driven) a fotogramas PNG.
 Tiempo virtual: parchea performance.now/Date.now/rAF para avanzar el reloj
 exactamente 1/FPS por fotograma -> video fluido aunque el render sea lento."""
-import sys, math, pathlib
+import sys, os, math, pathlib
 from playwright.sync_api import sync_playwright
 
 PROBE = '--probe' in sys.argv
 FPS = 30
 W, H = 1920, 1080
 OUT = pathlib.Path('/tmp/cfm56/frames')
+# 本地预览/截帧所用的静态服务器地址，默认与 README 的
+# `python3 -m http.server 8000` 一致；可用环境变量 CFM56_URL 覆盖。
+BASE_URL = os.environ.get('CFM56_URL', 'http://localhost:8000')
 
 VIRTUAL_TIME = """
 (() => {
@@ -56,7 +59,7 @@ with sync_playwright() as p:
         obj=loaded['obj'] or 'plane.obj' in r.url,
         hdr=loaded['hdr'] or 'sky.hdr' in r.url))
 
-    pg.goto('http://localhost:8123/index.html', wait_until='networkidle', timeout=60000)
+    pg.goto(f'{BASE_URL}/index.html', wait_until='networkidle', timeout=60000)
     pg.add_style_tag(content='::-webkit-scrollbar{display:none!important} html{scrollbar-width:none}')
 
     # dejar que cargue todo: tick hasta ver obj+hdr y unos frames de asentamiento
