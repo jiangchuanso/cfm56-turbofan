@@ -20,14 +20,17 @@ Servlet 4.0 / Tomcat 9 配置 `WEB-INF/web.xml`，由 Tomcat 内置的
 DefaultServlet 提供静态资源）。
 
 ### 1. 打包 WAR
-```powershell
-powershell -ExecutionPolicy Bypass -File build-war.ps1
-# 产物：cfm56.war  ->  上下文路径 /cfm56
-# 若要作为根应用部署（http://host:8080/），加参数：
-powershell -ExecutionPolicy Bypass -File build-war.ps1 -Name ROOT
-```
-打包脚本只收集运行必需的静态资源（`index.html`、`script.js`、`styles.css`、
-`plane.obj`、`plane.mtl`、`sky.hdr`）与 `WEB-INF/web.xml`，自动排除
+打包已迁移到 GitHub Actions 工作流（`.github/workflows/build-war.yml`），
+不再需要本机手动执行。推送到 `master` 或 `v*` 标签即自动构建，WAR 作为
+Artifact（标签推送时还会发布为 Release）产出。
+
+- **手动触发**：在仓库 **Actions → Build WAR → Run workflow**，可选 `name`
+  （默认 `cfm56`；填 `ROOT` 则作为根应用部署）。
+- **产物**：`cfm56.war` → 上下文路径 `/cfm56`；`ROOT.war` → `http://host:8080/`。
+- 本地仍保留 `build-war.ps1` 作为同一套构建逻辑的事实来源，供需要离线构建时使用。
+
+工作流收集的静态资源为：`index.html`、`script.js`、`styles.css`、
+`plane.obj`、`plane.mtl`、`sky.hdr` 与 `WEB-INF/web.xml`，自动排除
 `.git`、`folio-3d/`（Vite 变体需单独 `npm run build`）、`code-cards/`、`*.py` 等。
 
 ### 2. 部署

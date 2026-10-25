@@ -1,0 +1,64 @@
+# build-war.yml
+# 在 GitHub 上把 CFM56 涡扇发动机三维体验打包成可部署的 WAR。
+# 复用仓库内的 build-war.ps1（单一事实来源），在 Windows runner 上运行，
+# 产物作为 Artifact 上传；推送 v* tag 时额外发布为 Release。
+#
+# 触发方式:
+#   - 推送到 master 分支
+#   - 推送 v* 标签（生成 Release）
+#   - 手动 workflow_dispatch（可指定部署上下文名，默认 cfm56）
+
+name: Build WAR
+
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      name:
+        description: '部署上下文名（cfm56 -> /cfm56，ROOT -> 根应用）'
+        required: false
+        default: 'cfm56'
+
+permissions:
+  contents: write   # 仅 tag 发布 Release 时需要
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build WAR
+        shell: pwsh
+        run: |
+          $name = '${{ github.event.inputs.name }}'
+          if ([string]::IsNullOrWhiteSpace($name)) { $name = 'cfm56' }
+          pwsh -ExecutionPolicy Bypass -File build-war.ps1 -Name $name
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: war-${{ github.event.inputs.name || 'cfm56' }}
+          path: '*.war'
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build WAR for release
+        shell: pwsh
+        run: pwsh -ExecutionPolicy Bypass -File build-war.ps1 -Name cfm56
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: '*.war'
+          generate_release_notes: true
